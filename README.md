@@ -417,9 +417,7 @@ Este projeto está licenciado sob a MIT License - veja o arquivo [LICENSE](LICEN
 
 ## 👥 Equipe
 
-- **Desenvolvimento**: Manus AI
 - **Arquitetura**: Sistema modular e escalável
-- **Design**: Inspirado no HITS da App Sistemas
 - **Infraestrutura**: Docker e Cloud-ready
 
 ## 📞 Suporte
