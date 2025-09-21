@@ -1,160 +1,456 @@
-# Artigo Técnico: FisioClinic - Um Sistema Multitenant para Gestão de Clínicas de Fisioterapia
+# FisioClinic - Sistema de Gestão de Clínicas de Fisioterapia
 
-## Resumo
+## 📋 Visão Geral
 
-Este artigo técnico apresenta o desenvolvimento e a arquitetura do FisioClinic, um sistema de gestão multitenant projetado para clínicas de fisioterapia. O sistema é construído com uma stack tecnológica moderna, incluindo React para o frontend, Go para o backend e PostgreSQL como banco de dados, com orquestração via Docker. Abordamos as funcionalidades principais, as decisões de design e as justificativas técnicas para as escolhas de tecnologia, visando oferecer uma solução escalável, segura e de fácil manutenção. O documento também detalha os procedimentos para execução local e deployment em ambientes de nuvem como AWS e Azure, além de apresentar os resultados esperados e a conclusão do projeto.
+O FisioClinic é um sistema completo de gestão para clínicas de fisioterapia, desenvolvido com tecnologias modernas e arquitetura robusta. O sistema oferece funcionalidades abrangentes para gerenciamento de pacientes, profissionais, agendamentos, prontuários eletrônicos e controle financeiro, com suporte completo a multitenancy.
 
-## 1. Introdução
+### 🎯 Características Principais
 
-A gestão eficiente de clínicas de fisioterapia é um desafio complexo que envolve o gerenciamento de pacientes, agendamentos, prontuários médicos, informações financeiras e equipes de profissionais. A demanda por sistemas que otimizem esses processos, ao mesmo tempo em que garantem a segurança e a privacidade dos dados, tem crescido exponencialmente. O FisioClinic surge como uma resposta a essa necessidade, propondo uma solução robusta e flexível, com foco em multitenancy para atender a múltiplas clínicas de forma isolada e eficiente.
+- **Multitenancy**: Suporte para múltiplas clínicas em uma única instalação
+- **Interface Moderna**: Design responsivo inspirado no HITS da App Sistemas
+- **Segurança Robusta**: Autenticação JWT e controle de permissões por perfil
+- **Gestão Completa**: Agenda, pacientes, profissionais, prontuários e financeiro
+- **Upload de Arquivos**: Suporte para PDFs, imagens e documentos médicos
+- **APIs RESTful**: Backend bem estruturado com documentação completa
+- **Containerização**: Pronto para deploy com Docker e orquestração
 
-## 2. Requisitos do Sistema
+## 🏗️ Arquitetura Técnica
 
-O FisioClinic foi projetado para atender aos seguintes requisitos funcionais e não funcionais:
+### Stack Tecnológico
 
-### 2.1. Requisitos Funcionais
+**Frontend:**
+- React 18 com Vite
+- Tailwind CSS para estilização
+- shadcn/ui para componentes
+- React Router para navegação
+- Lucide React para ícones
 
-- **Agenda**: Marcação, gerenciamento e visualização (diária, semanal, mensal) de consultas e sessões.
-- **Cadastro de Profissionais**: Perfis de acesso (administrador, fisioterapeuta, recepcionista) com controle de permissões.
-- **Cadastro de Pacientes**: Dados pessoais completos, histórico médico, convênios e anexos (PDFs, imagens).
-- **Prontuário Eletrônico**: Registro de atendimentos, evolução clínica, observações e upload/visualização de arquivos.
-- **Gestão Financeira**: Controle de pagamentos, contas a receber/pagar e emissão de recibos.
-- **Multitenancy**: Suporte a múltiplas clínicas com isolamento de dados.
+**Backend:**
+- Go 1.21+ com Gin Framework
+- PostgreSQL 14+ como banco de dados
+- JWT para autenticação
+- CORS configurado para integração
+- Middleware de segurança
 
-### 2.2. Requisitos Não Funcionais
+**Infraestrutura:**
+- Docker e Docker Compose
+- Nginx para servir o frontend
+- Suporte para AWS e Azure
+- Scripts de automação
 
-- **Performance**: Respostas rápidas da interface e da API.
-- **Segurança**: Autenticação JWT, hash de senhas, controle de acesso baseado em função (RBAC) e CORS.
-- **Escalabilidade**: Capacidade de lidar com o crescimento do número de usuários e clínicas.
-- **Manutenibilidade**: Código limpo, modular e bem documentado.
-- **Usabilidade**: Interface intuitiva e responsiva, inspirada no estilo visual do HITS da App Sistemas.
-- **Deployabilidade**: Facilidade de execução local via Docker e deployment em nuvem (AWS, Azure).
+### Estrutura do Projeto
 
-## 3. Arquitetura e Design do Sistema
-
-O FisioClinic adota uma arquitetura de microsserviços, onde cada componente principal é isolado em seu próprio container Docker. Essa abordagem promove a modularidade, facilita a manutenção e permite a escalabilidade independente de cada serviço.
-
-### 3.1. Componentes Principais
-
-- **Frontend (React)**: Responsável pela interface do usuário, garantindo uma experiência moderna, responsiva e intuitiva. A comunicação com o backend é feita via chamadas RESTful.
-- **Backend (Go)**: Atua como a camada de API, expondo endpoints RESTful para todas as funcionalidades. Gerencia a lógica de negócios, a autenticação, a autorização e a interação com o banco de dados.
-- **Banco de Dados (PostgreSQL)**: Armazena todos os dados do sistema, incluindo informações de clínicas, usuários, pacientes, agendamentos, prontuários e transações financeiras. A escolha do PostgreSQL se deve à sua robustez, capacidade de lidar com dados relacionais complexos e suporte a recursos avançados como triggers e funções.
-- **Docker**: Utilizado para empacotar e orquestrar os serviços, garantindo um ambiente de desenvolvimento e produção consistente e facilitando o deployment.
-
-### 3.2. Diagrama de Arquitetura (Conceitual)
-
-```mermaid
-graph TD
-    A[Usuário] -->|Acessa via navegador| B(Frontend React)
-    B -->|Chamadas RESTful (JWT)| C(Backend Go API)
-    C -->|Consultas SQL| D(Banco de Dados PostgreSQL)
-    D -->|Armazenamento de Dados| E[Dados da Clínica 1]
-    D -->|Armazenamento de Dados| F[Dados da Clínica 2]
-    C -->|Upload/Download de Arquivos| G[Armazenamento de Arquivos (Local/S3/Azure Blob)]
+```
+physiotherapy-clinic-system/
+├── frontend/                 # Aplicação React
+│   ├── src/
+│   │   ├── components/      # Componentes reutilizáveis
+│   │   ├── pages/          # Páginas da aplicação
+│   │   ├── hooks/          # Hooks customizados
+│   │   ├── lib/            # Utilitários e API client
+│   │   └── assets/         # Recursos estáticos
+│   ├── Dockerfile
+│   └── nginx.conf
+├── backend/                 # API em Go
+│   ├── cmd/server/         # Ponto de entrada
+│   ├── internal/
+│   │   ├── handlers/       # Controllers da API
+│   │   ├── models/         # Modelos de dados
+│   │   ├── repository/     # Camada de dados
+│   │   └── middleware/     # Middlewares
+│   ├── pkg/                # Pacotes compartilhados
+│   └── Dockerfile
+├── database/               # Scripts do banco
+│   ├── init.sql           # Schema e dados iniciais
+│   └── Dockerfile
+├── docker-compose.yml      # Orquestração dos serviços
+├── API_DOCUMENTATION.md    # Documentação da API
+├── DEPLOYMENT_GUIDE.md     # Guia de deployment
+└── README.md              # Este arquivo
 ```
 
-## 4. Justificativa das Escolhas Tecnológicas
+## 🚀 Início Rápido
 
-A seleção das tecnologias para o FisioClinic foi guiada por critérios de performance, escalabilidade, segurança, facilidade de desenvolvimento e manutenção, além da compatibilidade com as necessidades de um sistema multitenant.
+### Pré-requisitos
 
-### 4.1. Frontend: React
+- Docker 20.10+
+- Docker Compose 2.0+
+- Git
 
-- **Popularidade e Ecossistema**: React é uma das bibliotecas JavaScript mais populares para construção de interfaces de usuário. Seu vasto ecossistema de ferramentas, bibliotecas e uma comunidade ativa garantem suporte contínuo e acesso a recursos de alta qualidade.
-- **Componentização**: A abordagem baseada em componentes do React facilita a construção de interfaces complexas e reutilizáveis, promovendo a modularidade e a manutenibilidade do código.
-- **Performance**: O Virtual DOM do React otimiza as atualizações da interface, resultando em aplicações rápidas e responsivas. A integração com Vite proporciona um ambiente de desenvolvimento ágil e builds otimizados.
-- **Responsividade**: Combinado com frameworks CSS como Tailwind CSS e bibliotecas de componentes como shadcn/ui, o React permite criar interfaces que se adaptam perfeitamente a diferentes tamanhos de tela (desktop, tablet, smartphone), atendendo ao requisito de usabilidade.
-- **Estilo Visual (HITS)**: A flexibilidade do React e do Tailwind CSS permite replicar e adaptar estilos visuais específicos, como o do HITS da App Sistemas, garantindo uma experiência familiar e agradável para o usuário.
+### Instalação com Docker (Recomendado)
 
-### 4.2. Backend: Go (Golang)
+1. **Clone o repositório:**
+```bash
+git clone <repository-url>
+cd physiotherapy-clinic-system
+```
 
-- **Performance e Concorrência**: Go é conhecido por sua alta performance e eficiência no tratamento de concorrência, graças às goroutines e canais. Isso é crucial para um backend que precisa lidar com múltiplas requisições simultâneas de diversas clínicas, garantindo baixa latência e alta vazão.
-- **Segurança**: A tipagem estática e a ausência de ponteiros aritméticos em Go reduzem a probabilidade de erros comuns de segurança. A implementação de JWT para autenticação e middlewares para controle de acesso e CORS reforça a segurança da API.
-- **Simplicidade e Manutenibilidade**: A sintaxe limpa e concisa de Go, juntamente com seu sistema de módulos e ferramentas de formatação (`gofmt`), promove um código mais legível e fácil de manter. Isso é vital para a longevidade do projeto.
-- **Ecossistema para APIs**: Frameworks como Gin fornecem uma base sólida para a construção de APIs RESTful, com recursos como roteamento, validação e tratamento de erros, acelerando o desenvolvimento.
-- **Deployabilidade**: Binários estáticos gerados por Go facilitam o empacotamento em containers Docker, resultando em imagens menores e mais seguras, ideais para ambientes de nuvem.
+2. **Configure as variáveis de ambiente:**
+```bash
+cp .env.example .env
+# Edite o arquivo .env conforme necessário
+```
 
-### 4.3. Banco de Dados: PostgreSQL
+3. **Execute o sistema:**
+```bash
+docker-compose up -d
+```
 
-- **Robustez e Confiabilidade**: PostgreSQL é um sistema de gerenciamento de banco de dados relacional (SGBDR) de código aberto altamente robusto, confiável e maduro, com décadas de desenvolvimento e uma vasta gama de recursos.
-- **Suporte a Multitenancy**: A capacidade de gerenciar esquemas complexos e a flexibilidade para implementar `tenant_id` em todas as tabelas tornam o PostgreSQL uma escolha excelente para multitenancy, garantindo o isolamento lógico dos dados de cada clínica.
-- **Integridade de Dados**: Suporte completo a transações ACID, chaves estrangeiras, constraints e triggers assegura a integridade e consistência dos dados, o que é crítico para informações médicas e financeiras.
-- **Recursos Avançados**: PostgreSQL oferece recursos como JSONB para armazenamento de dados semi-estruturados, extensões (ex: `uuid-ossp` para UUIDs), e funções avançadas que podem ser exploradas para otimizar o sistema.
-- **Escalabilidade**: Embora seja um banco de dados relacional, o PostgreSQL pode ser escalado verticalmente e horizontalmente (com técnicas como sharding ou replicação), atendendo às necessidades futuras de crescimento.
+4. **Acesse o sistema:**
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8080/api
+- Health Check: http://localhost:8080/health
 
-### 4.4. Orquestração: Docker e Docker Compose
+### Instalação Local (Desenvolvimento)
 
-- **Consistência de Ambiente**: Docker garante que o ambiente de desenvolvimento seja idêntico ao ambiente de produção, eliminando problemas de "funciona na minha máquina". Isso é fundamental para equipes de desenvolvimento e para o deployment.
-- **Isolamento de Serviços**: Cada componente (frontend, backend, banco de dados) roda em seu próprio container isolado, evitando conflitos de dependências e facilitando a manutenção e atualização de cada parte do sistema independentemente.
-- **Facilidade de Deployment**: Docker Compose simplifica a orquestração de múltiplos containers, permitindo que todo o sistema seja iniciado com um único comando (`docker-compose up -d`), o que é ideal para execução local e para ambientes de staging.
-- **Portabilidade para Nuvem**: Containers Docker são o padrão de facto para deployment em plataformas de nuvem como AWS ECS/EKS, Azure Container Instances/AKS, facilitando a migração e a escalabilidade em infraestruturas modernas.
+#### 1. Banco de Dados PostgreSQL
 
-## 5. Implementação e Resultados Esperados
+```bash
+# Instale o PostgreSQL
+sudo apt update
+sudo apt install postgresql postgresql-contrib
 
-A implementação do FisioClinic seguiu uma abordagem modular, com separação clara de responsabilidades entre as camadas de apresentação, lógica de negócios e persistência de dados. O desenvolvimento iterativo permitiu a validação contínua das funcionalidades e a integração progressiva dos componentes.
+# Inicie o serviço
+sudo systemctl start postgresql
 
-### 5.1. Estrutura do Projeto
+# Crie o banco de dados
+sudo -u postgres createdb physiotherapy_clinic
 
-O projeto está organizado em diretórios `frontend`, `backend` e `database`, cada um contendo seu próprio `Dockerfile` e configurações específicas, orquestrados por um `docker-compose.yml` central.
+# Configure a senha do usuário postgres
+sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres123';"
 
-### 5.2. Resultados Esperados
+# Execute o script de inicialização
+sudo -u postgres psql -d physiotherapy_clinic -f database/init.sql
+```
 
-Ao final do desenvolvimento, o FisioClinic deverá apresentar os seguintes resultados:
+#### 2. Backend (Go)
 
-- **Sistema Funcional**: Uma aplicação web completa, com todas as funcionalidades listadas nos requisitos, operando de forma integrada.
-- **Interface Intuitiva**: Um frontend responsivo e esteticamente agradável, que facilite a navegação e o uso por parte de administradores, fisioterapeutas e recepcionistas.
-- **API Robusta**: Um backend seguro e performático, capaz de gerenciar grandes volumes de dados e requisições, com documentação clara para futuras integrações.
-- **Ambiente Reproduzível**: A capacidade de configurar e executar o sistema em qualquer máquina com Docker, garantindo consistência entre os ambientes.
-- **Pronto para Nuvem**: A infraestrutura e o código preparados para um deployment eficiente em provedores de nuvem, com guias detalhados para AWS e Azure.
-- **Documentação Abrangente**: README, documentação da API e guias de deployment que permitam a qualquer usuário, mesmo leigo em desenvolvimento, entender e operar o sistema.
+```bash
+# Navegue para o diretório do backend
+cd backend
 
-## 6. Guia de Início Rápido para Usuários Leigos
+# Instale o Go (se necessário)
+wget https://go.dev/dl/go1.21.0.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.21.0.linux-amd64.tar.gz
+export PATH=$PATH:/usr/local/go/bin
 
-Este guia simplificado permite que qualquer pessoa execute o FisioClinic localmente ou entenda como ele pode ser implantado em nuvem, mesmo sem conhecimento aprofundado em programação.
+# Configure as variáveis de ambiente
+cp .env.example .env
+# Edite o arquivo .env com suas configurações
 
-### 6.1. Execução Local com Docker (Recomendado)
+# Instale as dependências
+go mod tidy
 
-O Docker é uma ferramenta que permite rodar o sistema completo em um ambiente isolado, sem a necessidade de instalar Go, Node.js ou PostgreSQL diretamente em seu computador. Pense no Docker como uma "caixa" que contém tudo o que o sistema precisa para funcionar.
+# Execute o backend
+go run cmd/server/main.go
+```
 
-**Pré-requisitos:**
-1.  **Instale o Docker e o Docker Compose**: Se você usa Windows ou macOS, baixe e instale o [Docker Desktop](https://www.docker.com/products/docker-desktop/). Para Linux, siga as instruções de instalação do [Docker Engine](https://docs.docker.com/engine/install/) e [Docker Compose](https://docs.docker.com/compose/install/).
-2.  **Baixe o Projeto**: Faça o download do arquivo `physiotherapy-clinic-system-final.zip` e extraia-o para uma pasta em seu computador.
+#### 3. Frontend (React)
 
-**Passos para Rodar o Sistema:**
+```bash
+# Em um novo terminal, navegue para o frontend
+cd frontend
 
-1.  **Abra o Terminal/Prompt de Comando**: Navegue até a pasta `physiotherapy-clinic-system` que você extraiu.
-    ```bash
-    cd /caminho/para/sua/pasta/physiotherapy-clinic-system
-    ```
-2.  **Inicie o Sistema**: Digite o comando abaixo e pressione Enter. Isso fará com que o Docker baixe as "caixas" necessárias e inicie o frontend, backend e banco de dados.
-    ```bash
-    docker-compose up -d
-    ```
-    *Aguarde alguns minutos na primeira vez, pois o Docker precisa baixar as imagens.* Você pode verificar o progresso com `docker-compose logs -f`.
-3.  **Acesse o Sistema**: Abra seu navegador de internet e digite `http://localhost:3000`. Você verá a tela de login do FisioClinic.
+# Instale as dependências
+npm install
 
-**Credenciais de Teste:**
-- **Clínica FisioVida**: Email: `admin@fisiovida.com.br`, Senha: `admin123`
-- **Clínica Bem Estar**: Email: `admin@bemestar.com.br`, Senha: `admin123`
+# Configure as variáveis de ambiente
+cp .env.example .env
+# Edite o arquivo .env
 
-### 6.2. Deployment em Nuvem (AWS ou Azure)
+# Execute o frontend
+npm run dev
+```
 
-Para rodar o FisioClinic em um ambiente de produção na nuvem, como AWS (Amazon Web Services) ou Azure (Microsoft Azure), o processo envolve configurar serviços específicos que gerenciam os containers Docker e o banco de dados. Isso é feito para garantir alta disponibilidade, segurança e escalabilidade.
+## 🔐 Credenciais de Teste
 
-**Conceitos Básicos:**
-- **Containers**: As "caixas" do Docker que contêm o frontend e o backend.
-- **Banco de Dados Gerenciado**: Serviços de banco de dados na nuvem (ex: AWS RDS, Azure Database for PostgreSQL) que cuidam da manutenção, backup e escalabilidade do PostgreSQL.
-- **Serviços de Container**: Plataformas na nuvem (ex: AWS ECS Fargate, Azure Container Instances) que executam e gerenciam seus containers automaticamente.
-- **Balanceador de Carga**: Distribui o tráfego de usuários entre múltiplos containers do frontend e backend para garantir que o sistema não fique sobrecarregado.
+O sistema vem com usuários de teste pré-configurados:
 
-**Como Funciona (Simplificado):**
-1.  **Preparação**: Suas "caixas" (containers) são enviadas para um local de armazenamento na nuvem (ex: AWS ECR, Azure Container Registry).
-2.  **Banco de Dados**: Um serviço de banco de dados PostgreSQL é configurado na nuvem, separado dos containers.
-3.  **Execução**: Os serviços de container na nuvem pegam suas "caixas" e as executam, conectando-as ao banco de dados.
-4.  **Acesso**: Um balanceador de carga direciona os usuários para os containers do frontend, que por sua vez se comunicam com os containers do backend.
+**Clínica FisioVida:**
+- Email: admin@fisiovida.com.br
+- Senha: admin123
+- Perfil: Administrador
 
-**Para mais detalhes sobre o deployment em nuvem, consulte o arquivo `DEPLOYMENT_GUIDE.md` no projeto.** Este guia fornece comandos e configurações específicas para cada plataforma, permitindo que um profissional de TI configure o ambiente de produção.
+**Clínica Bem Estar:**
+- Email: admin@bemestar.com.br
+- Senha: admin123
+- Perfil: Administrador
 
-## 7. Conclusão
+## 📱 Funcionalidades
 
-O FisioClinic representa uma solução abrangente e tecnologicamente avançada para a gestão de clínicas de fisioterapia. A escolha estratégica de React, Go, PostgreSQL e Docker, aliada a uma arquitetura multitenant, resulta em um sistema performático, seguro, escalável e de fácil manutenção. A documentação detalhada e os guias de início rápido garantem que o projeto seja acessível tanto para desenvolvedores quanto para usuários leigos, facilitando sua adoção e deployment em diversos cenários. Os resultados esperados incluem uma melhoria significativa na eficiência operacional das clínicas, otimizando o gerenciamento de pacientes, agendamentos e finanças, e fornecendo uma base sólida para futuras expansões e integrações.
+### 🏥 Gestão de Clínicas (Multitenancy)
+- Isolamento completo de dados entre clínicas
+- Configurações personalizadas por clínica
+- Suporte para múltiplas clínicas na mesma instalação
+
+### 👥 Cadastro de Profissionais
+- Perfis de acesso (Administrador, Fisioterapeuta, Recepcionista)
+- Controle granular de permissões
+- Especialização e informações profissionais
+- Gestão de usuários por clínica
+
+### 🧑‍⚕️ Cadastro de Pacientes
+- Dados pessoais completos (CPF, RG, contatos)
+- Endereço e informações de emergência
+- Convênios médicos e números de carteira
+- Histórico médico e observações
+- Vinculação de arquivos e documentos
+
+### 📅 Sistema de Agenda
+- Visualização diária, semanal e mensal
+- Marcação e gerenciamento de consultas
+- Status de agendamentos (agendado, confirmado, em andamento, concluído, cancelado, faltou)
+- Filtros por profissional, paciente e período
+- Controle de horários e disponibilidade
+
+### 📋 Prontuário Eletrônico
+- Registro detalhado de atendimentos
+- Diagnósticos e planos de tratamento
+- Evolução clínica e observações
+- Anexação de arquivos (exames, imagens, PDFs)
+- Histórico completo por paciente
+- Vinculação com agendamentos
+
+### 💰 Gestão Financeira
+- Controle de receitas e despesas
+- Emissão de recibos de atendimento
+- Gestão de contas a receber e a pagar
+- Status de pagamentos (pendente, pago, vencido, cancelado)
+- Relatórios financeiros e resumos
+- Múltiplas formas de pagamento
+
+### 📁 Gestão de Arquivos
+- Upload de documentos (PDF, imagens, Word)
+- Organização por paciente e prontuário
+- Visualização e download seguro
+- Controle de acesso por permissões
+- Armazenamento local ou em nuvem
+
+### 📊 Dashboard e Relatórios
+- KPIs financeiros e de atendimentos
+- Gráficos e métricas em tempo real
+- Resumos por período
+- Indicadores de performance
+- Ações rápidas para funcionalidades principais
+
+## 🔧 Configuração Avançada
+
+### Variáveis de Ambiente
+
+#### Backend (.env)
+```env
+DATABASE_URL=postgres://postgres:postgres123@localhost:5432/physiotherapy_clinic?sslmode=disable
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
+PORT=8080
+```
+
+#### Frontend (.env)
+```env
+VITE_API_URL=http://localhost:8080/api
+```
+
+#### Docker Compose (.env)
+```env
+POSTGRES_DB=physiotherapy_clinic
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres123
+JWT_SECRET=your-super-secret-jwt-key-change-in-production-2024
+VITE_API_URL=http://localhost:8080/api
+```
+
+### Configuração de Produção
+
+Para ambientes de produção, considere:
+
+1. **Segurança:**
+   - Use senhas fortes e únicas
+   - Configure SSL/TLS
+   - Implemente rate limiting
+   - Use secrets managers (AWS Secrets Manager, Azure Key Vault)
+
+2. **Performance:**
+   - Configure connection pooling no banco
+   - Implemente cache (Redis)
+   - Use CDN para assets estáticos
+   - Configure load balancing
+
+3. **Monitoramento:**
+   - Logs estruturados
+   - Métricas de aplicação
+   - Health checks
+   - Alertas automatizados
+
+## 📚 Documentação
+
+- **[API Documentation](API_DOCUMENTATION.md)**: Documentação completa das APIs REST
+- **[Deployment Guide](DEPLOYMENT_GUIDE.md)**: Guia detalhado para deploy em diferentes ambientes
+- **[Database Schema](database/multitenancy-schema.md)**: Documentação do esquema do banco de dados
+
+## 🧪 Testes
+
+### Executar Testes do Backend
+```bash
+cd backend
+go test ./...
+```
+
+### Executar Testes do Frontend
+```bash
+cd frontend
+npm test
+```
+
+### Testes de Integração
+```bash
+# Execute o sistema completo
+docker-compose up -d
+
+# Execute os testes de integração
+npm run test:integration
+```
+
+## 🚀 Deploy em Produção
+
+### AWS (ECS + RDS)
+```bash
+# Consulte o DEPLOYMENT_GUIDE.md para instruções detalhadas
+# Exemplo básico:
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <account>.dkr.ecr.us-east-1.amazonaws.com
+docker build -t fisio-clinic-backend backend/
+docker tag fisio-clinic-backend:latest <account>.dkr.ecr.us-east-1.amazonaws.com/fisio-clinic-backend:latest
+docker push <account>.dkr.ecr.us-east-1.amazonaws.com/fisio-clinic-backend:latest
+```
+
+### Azure (Container Instances + PostgreSQL)
+```bash
+# Consulte o DEPLOYMENT_GUIDE.md para instruções detalhadas
+az acr build --registry fisioclinicacr --image fisio-clinic-backend:latest backend/
+az container create --resource-group fisio-clinic-rg --name backend --image fisioclinicacr.azurecr.io/fisio-clinic-backend:latest
+```
+
+## 🛠️ Desenvolvimento
+
+### Estrutura de Desenvolvimento
+
+1. **Backend (Go):**
+   - Arquitetura em camadas (handlers, services, repositories)
+   - Middleware para autenticação e CORS
+   - Validação de dados e tratamento de erros
+   - Testes unitários e de integração
+
+2. **Frontend (React):**
+   - Componentes funcionais com hooks
+   - Context API para gerenciamento de estado
+   - Roteamento com React Router
+   - Design system com Tailwind CSS
+
+3. **Banco de Dados:**
+   - Schema normalizado com relacionamentos
+   - Índices para performance
+   - Triggers para auditoria
+   - Suporte a multitenancy
+
+### Contribuindo
+
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
+
+### Padrões de Código
+
+- **Go**: Siga as convenções do `gofmt` e `golint`
+- **React**: Use ESLint e Prettier
+- **SQL**: Use snake_case para nomes de tabelas e colunas
+- **Git**: Commits semânticos (feat, fix, docs, style, refactor, test, chore)
+
+## 🔍 Troubleshooting
+
+### Problemas Comuns
+
+1. **Erro de conexão com banco:**
+   ```bash
+   # Verifique se o PostgreSQL está rodando
+   sudo systemctl status postgresql
+   
+   # Teste a conexão
+   psql -h localhost -U postgres -d physiotherapy_clinic
+   ```
+
+2. **Erro de CORS:**
+   ```bash
+   # Verifique as configurações de CORS no backend
+   # Certifique-se de que o frontend está na lista de origens permitidas
+   ```
+
+3. **Problemas com Docker:**
+   ```bash
+   # Limpe containers e volumes
+   docker-compose down -v
+   docker system prune -a
+   
+   # Rebuild completo
+   docker-compose build --no-cache
+   docker-compose up -d
+   ```
+
+### Logs e Debugging
+
+```bash
+# Logs do Docker Compose
+docker-compose logs -f
+
+# Logs específicos
+docker-compose logs -f backend
+docker-compose logs -f frontend
+docker-compose logs -f db
+
+# Acesso aos containers
+docker-compose exec backend sh
+docker-compose exec db psql -U postgres -d physiotherapy_clinic
+```
+
+## 📄 Licença
+
+Este projeto está licenciado sob a MIT License - veja o arquivo [LICENSE](LICENSE) para detalhes.
+
+## 👥 Equipe
+
+- **Desenvolvimento**: Manus AI
+- **Arquitetura**: Sistema modular e escalável
+- **Design**: Inspirado no HITS da App Sistemas
+- **Infraestrutura**: Docker e Cloud-ready
+
+## 📞 Suporte
+
+Para suporte técnico ou dúvidas:
+
+1. Consulte a documentação completa
+2. Verifique os logs do sistema
+3. Consulte o guia de troubleshooting
+4. Abra uma issue no repositório
+
+## 🔄 Roadmap
+
+### Versão 2.0 (Planejada)
+- [ ] Módulo de relatórios avançados
+- [ ] Integração com sistemas de pagamento
+- [ ] App mobile (React Native)
+- [ ] Notificações push
+- [ ] Integração com WhatsApp
+- [ ] Telemedicina básica
+- [ ] BI e analytics avançados
+
+### Melhorias Contínuas
+- [ ] Testes automatizados completos
+- [ ] CI/CD pipeline
+- [ ] Monitoramento avançado
+- [ ] Performance optimization
+- [ ] Acessibilidade (WCAG 2.1)
+- [ ] Internacionalização (i18n)
+
+---
+
+**FisioClinic** - Sistema completo para gestão de clínicas de fisioterapia 🏥✨
 

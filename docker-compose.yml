@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # Banco de dados PostgreSQL
+  db:
+    build: ./database
+    container_name: physiotherapy_db
+    environment:
+      POSTGRES_DB: physiotherapy_clinic
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - physiotherapy_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Backend Go
+  backend:
+    build: ./backend
+    container_name: physiotherapy_backend
+    environment:
+      DATABASE_URL: postgres://postgres:postgres123@db:5432/physiotherapy_clinic?sslmode=disable
+      JWT_SECRET: your-secret-key-change-in-production-2024
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - physiotherapy_network
+    volumes:
+      - ./backend/uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend React
+  frontend:
+    build: ./frontend
+    container_name: physiotherapy_frontend
+    environment:
+      VITE_API_URL: http://localhost:8080/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - physiotherapy_network
+
+volumes:
+  postgres_data:
+
+networks:
+  physiotherapy_network:
+    driver: bridge
+
